@@ -123,6 +123,7 @@ import static org.apache.flink.runtime.entrypoint.component.FileJobGraphRetrieve
 import static org.apache.flink.util.Preconditions.checkArgument;
 import static org.apache.flink.util.Preconditions.checkNotNull;
 import static org.apache.flink.yarn.YarnConfigKeys.LOCAL_RESOURCE_DESCRIPTOR_SEPARATOR;
+import static org.apache.flink.runtime.jobgraph.JobGraph;
 
 /**
  * The descriptor with deployment information for deploying a Flink cluster on Yarn.
@@ -155,6 +156,8 @@ public class YarnClusterDescriptor implements ClusterDescriptor<ApplicationId> {
 	private final String applicationType;
 
 	private String zookeeperNamespace;
+	/** save the submitted JobGraph*/
+	private JobGraph jobGraph;
 
 	private YarnConfigOptions.UserJarInclusion userJarInclusion;
 
@@ -224,6 +227,10 @@ public class YarnClusterDescriptor implements ClusterDescriptor<ApplicationId> {
 
 	public YarnClient getYarnClient() {
 		return yarnClient;
+	}
+
+	public JobGraph getJobGraph(){
+		return this.jobGraph;
 	}
 
 	/**
@@ -559,6 +566,7 @@ public class YarnClusterDescriptor implements ClusterDescriptor<ApplicationId> {
 			PackagedProgram program = FlinkPerJobUtil.buildProgram(url,clusterSpecification);
 			clusterSpecification.setProgram(program);
 			jobGraph = PackagedProgramUtils.createJobGraph(program, clusterSpecification.getConfiguration(), clusterSpecification.getParallelism(), false);
+			this.jobGraph = jobGraph;
 			String pluginLoadMode = clusterSpecification.getConfiguration().getString(ConfigConstant.FLINK_PLUGIN_LOAD_MODE_KEY);
 			if(StringUtils.equalsIgnoreCase(pluginLoadMode, ConstantValue.SHIP_FILE_PLUGIN_LOAD_MODE)){
 				jobGraph.getClasspaths().forEach(jarFile -> {
